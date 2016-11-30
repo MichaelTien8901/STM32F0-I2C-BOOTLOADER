@@ -1,5 +1,6 @@
 #include "main.h"
 #include "stm32f0xx_hal.h"
+#include "bootconfig.h"
 uint8_t hex_value( uint8_t ch ) 
 {
    if ((ch >= '0' ) && ( ch <= '9'))
@@ -17,13 +18,8 @@ void hex2bin( uint8_t *pin, uint8_t *pout, uint8_t len )
       pout[i] = (hex_value( pin[i*2]) << 4)+ hex_value( pin[i*2+1]);
    }
 }
-#define FLASH_USER_START_ADDR   ADDR_FLASH_PAGE_6   /* Start @ of user Flash area */
-#define FLASH_USER_END_ADDR     ADDR_FLASH_PAGE_63 + FLASH_PAGE_SIZE   /* End @ of user Flash area */
 static FLASH_EraseInitTypeDef EraseInitStruct;
-#define ADDR_FLASH_PAGE_0     ((uint32_t)0x08000000) /* Base @ of Page 0, 2 Kbytes */
-#define ADDR_FLASH_PAGE_6     ((uint32_t)0x08003000) /* Base @ of Page 6, 2 Kbytes */
-#define ADDR_FLASH_PAGE_63    ((uint32_t)0x0801F800) /* Base @ of Page 63, 2 Kbytes */
-static char erase_flags[64];
+static char erase_flags[FLASH_PAGE_NO];
 uint32_t PageError = 0;
 int8_t check_flash_address( uint32_t addr )
 {
@@ -79,14 +75,14 @@ uint16_t buffer[64];
 uint16_t offsetAddr;
 uint32_t upperAddr;
 
-int8_t I2C_BootLoader(void)
+int8_t Intel_BootLoader(void)
 {
    
    uint16_t eeaddr = 0;
    int8_t flash_flag = 0; 
    int i;
    HAL_StatusTypeDef flag;
-   for ( i = 0; i < 64; i ++ ) {
+   for ( i = 0; i < FLASH_PAGE_NO; i ++ ) {
       erase_flags[i] = 0;
    }
    flag = StreamRead( eeaddr, data, 11 ); // read first 9 bytes

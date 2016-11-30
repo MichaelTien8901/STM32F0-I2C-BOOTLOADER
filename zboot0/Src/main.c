@@ -35,7 +35,7 @@
 #include "stm32f0xx_hal.h"
 
 /* USER CODE BEGIN Includes */
-#define APPLICATION_ADDRESS     (uint32_t)0x08003000
+#include "bootconfig.h"
 typedef  void (*pFunction)(void);
 pFunction Jump_To_Application_Function;
 uint32_t JumpAddress;
@@ -58,7 +58,6 @@ static void MX_I2C1_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-int8_t I2C_BootLoader(void);
 void dummy_main_function(void);
 
 /* USER CODE END PFP */
@@ -81,8 +80,10 @@ extern pFunction Jump_To_Application_Function;
 extern uint32_t JumpAddress;
 extern uint32_t const dummy_vector_table[2];
     /* Test if user code is programmed starting from address "APPLICATION_ADDRESS" */
+#ifdef Uses_DUMMY_MAIN   
     if ( (uint32_t) &dummy_vector_table == APPLICATION_ADDRESS ) // use this to prevent dummy_vector_table ignored by linker
-    if (((*(__IO uint32_t*)APPLICATION_ADDRESS) & 0x2FFE0000 ) == 0x20000000)
+#endif       
+    if (((*(__IO uint32_t*)APPLICATION_ADDRESS) & 0x2FFE0000 ) == 0x20000000) // check stack pointer in the SRAM address
     { 
       /* Jump to user application */
       JumpAddress = *(__IO uint32_t*) (APPLICATION_ADDRESS + 4);
@@ -95,9 +96,13 @@ extern uint32_t const dummy_vector_table[2];
       Jump_To_Application_Function();
     }
 }
+
 void dummy_main_function(void)
 {
+   // This is the dummy main program embedded in the bootloader.
+   // It will be replaced when application loaded by bootloader.
    while(1) {
+#ifdef Uses_DUMMY_MAIN      
      HAL_Delay(100);
      HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
      HAL_Delay(100);
@@ -106,7 +111,14 @@ void dummy_main_function(void)
      HAL_GPIO_TogglePin(LD5_GPIO_Port, LD5_Pin);
      HAL_Delay(100);
      HAL_GPIO_TogglePin(LD6_GPIO_Port, LD6_Pin);
+#endif      
    }
+}
+
+int8_t IsNewProgramAvailable(void) 
+{
+   // check if I2C is plugged in by I2C SCL pull-up pin
+   return HAL_GPIO_ReadPin( I2C_EE_SCL_GPIO_Port, I2C_EE_SCL_Pin ) == GPIO_PIN_SET;
 }
 
 /* USER CODE END 0 */
@@ -131,9 +143,8 @@ int main(void)
   MX_I2C1_Init();
 
   /* USER CODE BEGIN 2 */
-  // check if I2C is plugged in
-  if ( HAL_GPIO_ReadPin( I2C_EE_SCL_GPIO_Port, I2C_EE_SCL_Pin ) == GPIO_PIN_SET ) {
-     if ( BootloadResult( I2C_BootLoader())) {
+  if ( IsNewProgramAvailable()) {
+     if ( BootloadResult( BootLoader())) {
         while(1) {
          HAL_GPIO_TogglePin(LD5_GPIO_Port, LD5_Pin);
          HAL_Delay(100);

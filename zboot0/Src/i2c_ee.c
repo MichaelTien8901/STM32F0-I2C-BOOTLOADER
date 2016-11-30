@@ -1,11 +1,6 @@
 #include "main.h"
 #include "stm32f0xx_hal.h"
-
-extern I2C_HandleTypeDef hi2c1;
-
-#define I2C_EE_ADDR 0xA0
-#define I2C_EE2_ADDR 0xA2
-#define EE_I2C hi2c1
+#include "bootconfig.h"
 
 HAL_StatusTypeDef EE_ReadBuffer( uint8_t device_id, uint16_t ReadAddr, uint8_t *pBuffer, uint16_t numByteToRead ) 
 {
