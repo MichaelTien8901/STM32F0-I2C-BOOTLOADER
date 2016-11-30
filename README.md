@@ -1,8 +1,11 @@
 # STM32F0-I2C-BOOTLOADER
 STM32F072RB Discovery board bootloader using I2C EEPROM
 ## Circuit
+
 ### I2C EEPROM Microchip 24C512
-Pins
+
+#### Pins
+
 | EEPROM 24C512 | STM32F072RB PINS | 
 |:--------------|:-----------------|
 | 1  A0         | GND |
@@ -15,4 +18,5 @@ Pins
 | 8  VCC        | 3V  |
 
 ## I2C EEPROM data format
+
 Using INTEL hex format directly from KEIL compiler.
