@@ -120,7 +120,20 @@ int8_t IsNewProgramAvailable(void)
    // check if I2C is plugged in by I2C SCL pull-up pin
    return HAL_GPIO_ReadPin( I2C_EE_SCL_GPIO_Port, I2C_EE_SCL_Pin ) == GPIO_PIN_SET;
 }
-
+void Message_Boot_OK(void)
+{
+   while(1) { // green
+      HAL_GPIO_TogglePin(LD5_GPIO_Port, LD5_Pin);
+      HAL_Delay(100);
+   }        
+}
+void Message_Boot_Failed(void)
+{
+   while(1) { // red 
+      HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+      HAL_Delay(100);
+   }
+}
 /* USER CODE END 0 */
 
 int main(void)
@@ -145,15 +158,9 @@ int main(void)
   /* USER CODE BEGIN 2 */
   if ( IsNewProgramAvailable()) {
      if ( BootloadResult( BootLoader())) {
-        while(1) {
-         HAL_GPIO_TogglePin(LD5_GPIO_Port, LD5_Pin);
-         HAL_Delay(100);
-        }        
+        Message_Boot_OK();
      } else {
-        while(1) { // red 
-         HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-         HAL_Delay(100);
-        }        
+        Message_Boot_Failed();
      }
   } 
    jump_to_application();
