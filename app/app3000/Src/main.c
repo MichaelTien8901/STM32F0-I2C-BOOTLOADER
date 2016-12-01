@@ -66,8 +66,6 @@ int main(void)
 #define LOAD_ADDRESS  Image$$ER_IROM1$$Base
    
    volatile uint32_t *VectorTable = (volatile uint32_t *) 0x20000000;
-//   extern unsigned int Image$$RESET$$Base;
-//   if ( Image$$RESET$$Base != 0x8000000 ) {
    extern unsigned int LOAD_ADDRESS;
    if ((uint32_t)&LOAD_ADDRESS != 0x8000000 ) {
       // load vector table
