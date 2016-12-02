@@ -462,9 +462,14 @@
               </FileOption>
             </File>
             <File>
-              <FileName>bootload.c</FileName>
+              <FileName>util_flash.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Src\bootload.c</FilePath>
+              <FilePath>..\Src\util_flash.c</FilePath>
+            </File>
+            <File>
+              <FileName>bootload_intel.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\bootload_intel.c</FilePath>
             </File>
           </Files>
         </Group>

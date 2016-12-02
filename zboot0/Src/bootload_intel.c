@@ -1,6 +1,8 @@
 #include "main.h"
 #include "stm32f0xx_hal.h"
 #include "bootconfig.h"
+#include "util_flash.h"
+
 uint8_t hex_value( uint8_t ch ) 
 {
    if ((ch >= '0' ) && ( ch <= '9'))
@@ -18,51 +20,6 @@ void hex2bin( uint8_t *pin, uint8_t *pout, uint8_t len )
       pout[i] = (hex_value( pin[i*2]) << 4)+ hex_value( pin[i*2+1]);
    }
 }
-static FLASH_EraseInitTypeDef EraseInitStruct;
-static char erase_flags[FLASH_PAGE_NO];
-uint32_t PageError = 0;
-int8_t check_flash_address( uint32_t addr )
-{
-   uint32_t user_start_address;
-   uint32_t user_start_page;
-   if ( addr < FLASH_USER_START_ADDR ) return 0;
-   user_start_page = (addr - ADDR_FLASH_PAGE_0) / FLASH_PAGE_SIZE;
-   if ( erase_flags[user_start_page] ) return 1;
-   erase_flags[user_start_page] = 1;
-   user_start_address = user_start_page * FLASH_PAGE_SIZE + ADDR_FLASH_PAGE_0;
-  /* Erase the user Flash area
-    (area defined by FLASH_USER_START_ADDR and FLASH_USER_END_ADDR) ***********/
-
-  /* Fill EraseInit structure*/
-  EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;
-  EraseInitStruct.PageAddress = user_start_address;
-  EraseInitStruct.NbPages = 1;
-
-  if (HAL_FLASHEx_Erase(&EraseInitStruct, &PageError) != HAL_OK)
-  {
-    /*
-      Error occurred while page erase.
-      User can add here some code to deal with this error.
-      PageError will contain the faulty page and then to know the code error on this page,
-      user can call function 'HAL_FLASH_GetError()'
-    */
-    /* Infinite loop */
-     return 0;
-  }
-  return 1;
-}
-HAL_StatusTypeDef flash_programming( uint32_t addr, uint16_t *data, uint16_t len )
-{
-   int16_t index;
-   HAL_StatusTypeDef flag;
-   if ( !check_flash_address( addr )) return HAL_ERROR;
-   for ( index = 0; index < len; index ++ ) {
-      flag = HAL_FLASH_Program( FLASH_TYPEPROGRAM_HALFWORD, addr, *data++ );
-      addr += 2;
-      if ( flag != HAL_OK ) return flag;
-   }
-   return HAL_OK;
-}
 extern HAL_StatusTypeDef StreamRead( uint16_t ReadAddr, uint8_t *pBuffer, uint16_t numByteToRead );
 void Bootloader_Error_Callback(void)
 {
@@ -70,10 +27,10 @@ void Bootloader_Error_Callback(void)
    jump_to_application();
 }
 
-uint8_t data[128], len, sum, stype;
-uint16_t buffer[64];
-uint16_t offsetAddr;
-uint32_t upperAddr;
+static uint8_t data[128], len, sum, stype;
+static uint16_t buffer[64];
+static uint16_t offsetAddr;
+static uint32_t upperAddr;
 
 int8_t Intel_BootLoader(void)
 {
@@ -82,9 +39,7 @@ int8_t Intel_BootLoader(void)
    int8_t flash_flag = 0; 
    int i;
    HAL_StatusTypeDef flag;
-   for ( i = 0; i < FLASH_PAGE_NO; i ++ ) {
-      erase_flags[i] = 0;
-   }
+   init_flash();
    flag = StreamRead( eeaddr, data, 11 ); // read first 9 bytes
    if ( flag != HAL_OK ) {
       Bootloader_Error_Callback();
