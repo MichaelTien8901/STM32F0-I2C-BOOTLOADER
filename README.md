@@ -1,9 +1,13 @@
 # STM32F0-I2C-BOOTLOADER
+   The idea is simple.  If you need to update the program, plug in the EEPROM(with update program) and turn on the board.  The 
+   bootloader will update the program from the EEPROM.  After that, turn off board, and unplug EEPROM.
+   
    This project demostrate the bootloader for STM32F0 using STM32F072RB Discovery board.  
 When program booting, the bootloader will check if there is EEPROM connected to the specified I2C interface.  
 If EEPROM found, bootloader will load the new application.
+
    Even this bootloader use I2C EEPROM to load new application, it can be easily converted to other booting device, 
-UART, SPI devices, for example.  
+UART, SPI devices, for example. 
    
 ## I2C Circuit
 
